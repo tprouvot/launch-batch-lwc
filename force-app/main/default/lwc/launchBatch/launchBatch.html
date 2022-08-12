@@ -1,0 +1,15 @@
+<template>
+	<article class="slds-card">
+		<div class="slds-card__header slds-grid">
+			<header class="slds-media slds-media_center slds-has-flexi-truncate">
+				<div class="slds-media__body">
+					<lightning-progress-bar value={progress}></lightning-progress-bar>
+				</div>
+				<div class="slds-no-flex">
+					<lightning-button label={computedLabel} onclick={toggleProgress} class="slds-m-top_medium">
+					</lightning-button>
+				</div>
+			</header>
+		</div>
+	</article>
+</template>
