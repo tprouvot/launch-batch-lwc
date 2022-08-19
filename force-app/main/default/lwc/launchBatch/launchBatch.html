@@ -1,15 +1,11 @@
 <template>
-	<article class="slds-card">
-		<div class="slds-card__header slds-grid">
-			<header class="slds-media slds-media_center slds-has-flexi-truncate">
-				<div class="slds-media__body">
-					<lightning-progress-bar value={progress}></lightning-progress-bar>
-				</div>
-				<div class="slds-no-flex">
-					<lightning-button label={computedLabel} onclick={toggleProgress} class="slds-m-top_medium">
-					</lightning-button>
-				</div>
-			</header>
-		</div>
-	</article>
+	<lightning-card title="Run Batch">
+		<lightning-button label={computedLabel} onclick={toggleProgress} slot="actions"></lightning-button>
+		<p class="slds-p-horizontal_small">Job Id: {jobId}</p>
+		<p class="slds-p-horizontal_small">Status : {status}</p>
+		<p class="slds-p-horizontal_small">% : {processed}/{total}</p>
+		<p slot="footer">
+			<lightning-progress-bar value={progress}></lightning-progress-bar>
+		</p>
+	</lightning-card>
 </template>
