@@ -1,6 +1,6 @@
 # Launch Batch LWC
 
-This framework allow users to run, abort and monitor Apex batch from a LWC.
+This framework allows users to run, abort and monitor Apex batch from a LWC.
 
 # Disclaimer
 Launch Batch LWC is not an official Salesforce product, it has not been officially tested or documented by Salesforce.
