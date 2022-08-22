@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>launchBtn</fullName>
+        <categories>lwc btn launchBatch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Launch</shortDescription>
+        <value>Launch</value>
+    </labels>
+    <labels>
+        <fullName>abortBtn</fullName>
+        <categories>lwc btn launchBatch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Abort Job</shortDescription>
+        <value>Abort Job</value>
+    </labels>
+    <labels>
+        <fullName>sectionTitle</fullName>
+        <categories>lwc title launchBatch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Run Batch</shortDescription>
+        <value>Run Batch</value>
+    </labels>
+    <labels>
+        <fullName>statusLabel</fullName>
+        <categories>lwc label launchBatch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Status</shortDescription>
+        <value>Status</value>
+    </labels>
+</CustomLabels>

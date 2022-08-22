@@ -1,9 +1,12 @@
 <template>
-	<lightning-card title="Run Batch">
-		<lightning-button label={computedLabel} onclick={toggleProgress} slot="actions"></lightning-button>
-		<p class="slds-p-horizontal_small">Job Id: {jobId}</p>
-		<p class="slds-p-horizontal_small">Status : {status}</p>
-		<p class="slds-p-horizontal_small">% : {processed}/{total}</p>
+	<lightning-card title={label.sectionTitle}>
+		<lightning-button label={btnLabel} onclick={runBatch} slot="actions"></lightning-button>
+		<template if:true={isProgressing}>
+			<div class="loading-container slds-is-relative">
+				<lightning-spinner size="small"></lightning-spinner>
+			</div>
+		</template>
+		<p class="slds-p-horizontal_small">{label.statusLabel} : {processStatus}</p>
 		<p slot="footer">
 			<lightning-progress-bar value={progress}></lightning-progress-bar>
 		</p>

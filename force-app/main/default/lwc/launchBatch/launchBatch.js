@@ -1,109 +1,136 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import executeBatchJob from '@salesforce/apex/LaunchBatchController.executeBatchJob';
+import abortBatchJob from '@salesforce/apex/LaunchBatchController.abortBatchJob';
 import getBatchJobStatus from '@salesforce/apex/LaunchBatchController.getBatchJobStatus';
-import { getRecord } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
 
-//TODO use lwc encapsulation to pass those values
-import JOB_ID from '@salesforce/schema/MaskSObject__c.LastJobId__c';
-import ERROR_RECORDS from '@salesforce/schema/AsyncApexJob.NumberOfErrors';
-import ITEMS_PROCESSED from '@salesforce/schema/AsyncApexJob.JobItemsProcessed';
-import TOTAL_RECORDS from '@salesforce/schema/AsyncApexJob.TotalJobItems';
-import JOB_STATUS from '@salesforce/schema/AsyncApexJob.Status';
+import launchBtn from '@salesforce/label/c.launchBtn';
+import abortBtn from '@salesforce/label/c.abortBtn';
+import sectionTitle from '@salesforce/label/c.sectionTitle';
+import statusLabel from '@salesforce/label/c.statusLabel';
 
-//const FIELDS = [JOB_ID];
 export default class LaunchBatch extends LightningElement {
-	@api recordId;
 	@api className = '';
 	@api batchSize = 200;
 
 	@track progress = 100;
-	@track isBulk = false;
-	@track processStatus = 'In Progress';
+	@track processStatus;
+	@track isProgressing = false;
 
-	isProgressing = false;
-	status;
-	total;
-	processed;
 	jobId;
+	status;
+	total = 100;
+	processed = 100;
 	errors;
+	btnLabel;
+	_interval;
 
-	//@wire(getRecord, { recordId: '$recordId', fields: ['MaskSObject__c.LastJobId__c'] })
-	@wire(getRecord, { recordId: '$recordId', fields: [JOB_ID] })
-	wiredRecord({ error, data }) {
-		if (error) {
-			//TODO handle error
-			console.error(error);
-		} else if (data) {
-			this.jobId = data.fields.LastJobId__c.value;
+	label = {
+		sectionTitle,
+		statusLabel
+	};
 
-		}
-	}
+	@wire(getBatchJobStatus, { className: '$this.className' })
+	batchJobStatus;
 
-	get computedLabel() {
-		return this.isProgressing ? 'Stop Execution' : 'Launch ' + this.className;
+	connectedCallback() {
+		this.getJobStatus();
+		this._interval = setInterval(() => {
+			this.getJobStatus();
+		}, 2000);
 	}
 
 	renderedCallback() {
-		this.runJobStatusReq();
+		if (!this.isProcessStopped()) {
+			this.runJobStatusReq();
+		}
 	}
 
-	toggleProgress() {
+	runBatch() {
 		if (this.isProgressing) {
-			// stop
 			this.isProgressing = false;
-			clearInterval(this._interval);
-		} else {
-			executeBatchJob({
-				batchName: this.className,
-				scopeSize: this.batchSize
+			abortBatchJob({
+				jobId: this.jobId
 			}).then(result => {
-				console.log(JSON.stringify(result));
-				this.jobId = result.Id;
 				this.getJobStatus();
 			})
 				.catch((error) => {
 					// Handle errors
+					console.error(error);
+				});
+			clearInterval(this._interval);
+		} else {
+
+			executeBatchJob({
+				batchName: this.className,
+				scopeSize: this.batchSize
+			}).then(result => {
+				this.jobId = result;
+				this.getJobStatus();
+				this._interval = setInterval(() => {
+					this.getJobStatus();
+				}, 2000);
+			})
+				.catch((error) => {
+					// Handle errors
+					console.error(error);
 				});
 		}
 	}
 
 	disconnectedCallback() {
 		// it's needed for the case the component gets disconnected
-		// and the progress is being increased
-		// this code doesn't show in the example
 		clearInterval(this._interval);
 	}
 
-	getJobStatus() {
-		getBatchJobStatus({ jobId: this.jobId })
-			.then(result => {
-				this.status = result.Status;
-				console.log('Status is:' + this.status);
-				this.total = result.TotalJobItems;
-				console.log('Total Records:' + this.total);
-				this.processed = result.JobItemsProcessed;
-				console.log('Records Processed:' + this.processed);
-				this.errRec = result.NumberOfErrors;
-				console.log('error :' + this.errRec);
-			});
-		this.progress = (this.processed / this.total) * 100;
-		console.log('Progress is:' + this.progress);
-		this.processStatus = 'Processing => ' + this.progress + '/' + this.total;
-		if (this.progress === this.total) {
+	runJobStatusReq() {
+		if (this.isProcessStopped()) {
 			clearInterval(this._interval);
-			this.processStatus = 'Completed';
+		} else {
+			refreshApex(this.batchJobStatus);
 		}
 	}
 
-	runJobStatusReq() {
-		this._interval = setInterval(() => {
-			this.getJobStatus();
-		}, 5000);
-		if (this.processStatus == 'Completed') {
-			console.log('Refreshing Wire Status');
-			//will call my wire method to refresh the results once batch process completes
-			return refreshApex(this._wiredResult);
+	getJobStatus() {
+		this.updateStatusAndLabels();
+		getBatchJobStatus({ jobIdOrClassName: this.jobId ? this.jobId : this.className })
+			.then(result => {
+				this.jobId = result.Id;
+				this.status = result.Status;
+				this.total = result.TotalJobItems;
+				this.processed = result.JobItemsProcessed;
+				this.errRec = result.NumberOfErrors;
+				this.progress = this.total == 0 ? 0 : (this.processed / this.total) * 100;
+				this.processStatus = this.status + ' => ' + this.processed + '/' + this.total;
+				if (this.progress === 100) {
+					clearInterval(this._interval);
+					this.processStatus = this.status;
+					this.isProgressing = false;
+				} else {
+					this.isProgressing = true;
+				}
+				this.updateStatusAndLabels();
+				this.runJobStatusReq();
+			})
+			.catch((error) => {
+				// Handle errors
+				console.error(error);
+			});
+	}
+
+	updateStatusAndLabels() {
+		if (this.isProcessStopped()) {
+			clearInterval(this._interval);
+			this.isProgressing = false;
+			this.btnLabel = launchBtn + ' ' + this.className;
+		} else {
+			this.isProgressing = true;
+			this.btnLabel = abortBtn;
 		}
+	}
+
+	isProcessStopped() {
+		// batch statuses from AsyncApexJob which don't need to be integrated in customLabels
+		return this.status == 'Completed' || this.status == 'Aborted' ? true : false;
 	}
 }
