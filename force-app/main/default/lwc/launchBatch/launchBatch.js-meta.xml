@@ -10,6 +10,7 @@
         <targetConfig targets="lightning__RecordPage">
             <property name="className" type="String" label="Batch Class Name" required="true" default="" />
             <property name="batchSize" type="Integer" label="Batch Size" required="true" default="200" max="2000" description="The optimal scope size is a factor of 2000, for example, 100, 200, 400 and so on" />
+            <property name="durationDelay" type="Integer" label="Delay between executions" required="true" default="2000" min="1000" description="The time, in milliseconds, between apex query executions" />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

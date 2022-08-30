@@ -8,10 +8,12 @@ import launchBtn from '@salesforce/label/c.launchBtn';
 import abortBtn from '@salesforce/label/c.abortBtn';
 import sectionTitle from '@salesforce/label/c.sectionTitle';
 import statusLabel from '@salesforce/label/c.statusLabel';
+import notFound from '@salesforce/label/c.notFound';
 
 export default class LaunchBatch extends LightningElement {
 	@api className = '';
-	@api batchSize = 200;
+	@api batchSize;
+	@api durationDelay;
 
 	@track progress = 100;
 	@track processStatus;
@@ -37,7 +39,7 @@ export default class LaunchBatch extends LightningElement {
 		this.getJobStatus();
 		this._interval = setInterval(() => {
 			this.getJobStatus();
-		}, 2000);
+		}, this.durationDelay);
 	}
 
 	renderedCallback() {
@@ -69,7 +71,7 @@ export default class LaunchBatch extends LightningElement {
 				this.getJobStatus();
 				this._interval = setInterval(() => {
 					this.getJobStatus();
-				}, 2000);
+				}, this.durationDelay);
 			})
 				.catch((error) => {
 					// Handle errors
@@ -95,11 +97,11 @@ export default class LaunchBatch extends LightningElement {
 		this.updateStatusAndLabels();
 		getBatchJobStatus({ jobIdOrClassName: this.jobId ? this.jobId : this.className })
 			.then(result => {
-				this.jobId = result.Id;
-				this.status = result.Status;
-				this.total = result.TotalJobItems;
-				this.processed = result.JobItemsProcessed;
-				this.errRec = result.NumberOfErrors;
+				this.jobId = result == null ? null : result.Id;
+				this.status = result == null ? notFound : result.Status;
+				this.total = result == null ? 0 : result.TotalJobItems;
+				this.processed = result == null ? 0 : result.JobItemsProcessed;
+				this.errRec = result == null ? 0 : result.NumberOfErrors;
 				this.progress = this.total == 0 ? 0 : (this.processed / this.total) * 100;
 				this.processStatus = this.status + ' => ' + this.processed + '/' + this.total;
 				if (this.progress === 100) {
@@ -131,6 +133,6 @@ export default class LaunchBatch extends LightningElement {
 
 	isProcessStopped() {
 		// batch statuses from AsyncApexJob which don't need to be integrated in customLabels
-		return this.status == 'Completed' || this.status == 'Aborted' ? true : false;
+		return this.status == 'Completed' || this.status == 'Aborted' || this.status == notFound ? true : false;
 	}
 }

@@ -32,4 +32,12 @@
         <shortDescription>Status</shortDescription>
         <value>Status</value>
     </labels>
+    <labels>
+        <fullName>notFound</fullName>
+        <categories>lwc label launchBatch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Not Found</shortDescription>
+        <value>Not Found</value>
+    </labels>
 </CustomLabels>
